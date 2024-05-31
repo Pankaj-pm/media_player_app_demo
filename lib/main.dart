@@ -1,6 +1,10 @@
+import 'dart:math';
+
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:media_player_app_new/video_demo.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,10 +31,11 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin{
   int cIndex = 0;
 
   AssetsAudioPlayer assetsAudioPlayer = AssetsAudioPlayer();
+  late TabController tabController=TabController(length: 10, vsync: this);
 
   @override
   void initState() {
@@ -72,6 +77,8 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
         autoStart: false);
+
+    // tabController=TabController(length: 10, vsync: this);
     super.initState();
   }
 
@@ -79,167 +86,239 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        // backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text("Title",style: GoogleFonts.dancingScript()),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            CarouselSlider(
-              items: List.generate(assetsAudioPlayer.playlist?.audios.length ?? 0, (index) {
-                var audio = assetsAudioPlayer.playlist?.audios[index];
-                return Container(
-                  color: Colors.black12,
-                  width: double.infinity,
-                  margin: EdgeInsets.all(1),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.network(audio?.metas.image?.path ?? "", fit: BoxFit.fill),
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          height: 80,
-                          padding: EdgeInsets.all(15),
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.white,
-                                Colors.transparent,
-                              ],
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
+      body: Column(
+        children: [
+          TabBar(
+            controller: tabController,
+            indicatorColor: Colors.black,
+            unselectedLabelColor: Colors.grey,
+            labelColor: Colors.black,
+            indicatorSize: TabBarIndicatorSize.tab,
+            isScrollable: true,
+            // indicator: BoxDecoration(
+            //   color: Colors.black,
+            //   shape: BoxShape.circle
+            // ),
+
+            tabs: [
+              Tab(text: "Video"),
+              Tab(text: "Audio"),
+              Tab(text: "History"),
+              Tab(text: "Category"),
+              Tab(text: "Call"),
+              Tab(text: "Audio"),
+              Tab(text: "Video"),
+              Tab(text: "History"),
+              Tab(text: "Category"),
+              Tab(text: "Call"),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: tabController,
+              children: [
+                VideoDemo(),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          CarouselSlider(
+                            items: List.generate(assetsAudioPlayer.playlist?.audios.length ?? 0, (index) {
+                              var audio = assetsAudioPlayer.playlist?.audios[index];
+                              return Container(
+                                color: Colors.black12,
+                                width: double.infinity,
+                                margin: EdgeInsets.all(1),
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    Image.network(audio?.metas.image?.path ?? "", fit: BoxFit.fill),
+                                    Positioned(
+                                      bottom: 0,
+                                      left: 0,
+                                      right: 0,
+                                      child: Container(
+                                        height: 80,
+                                        padding: EdgeInsets.all(15),
+                                        decoration: const BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.white,
+                                              Colors.transparent,
+                                            ],
+                                            begin: Alignment.bottomCenter,
+                                            end: Alignment.topCenter,
+                                          ),
+                                        ),
+                                        child: Align(
+                                          alignment: Alignment.bottomLeft,
+                                          child: Text(audio?.metas.title ?? "",
+                                              style: TextStyle(fontWeight: FontWeight.bold)),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                            options: CarouselOptions(
+                              aspectRatio: 2,
+                              autoPlay: false,
+                              enlargeCenterPage: true,
+                              enlargeFactor: 0.2,
+                              viewportFraction: 0.9,
+                              enableInfiniteScroll: false,
+                              onPageChanged: (index, reason) {
+                                cIndex = index;
+                                setState(() {});
+                                var audio = assetsAudioPlayer.playlist?.audios[index];
+                                if (audio != null) {
+                                  assetsAudioPlayer.open(audio);
+                                }
+
+                                print("index $index");
+                              },
                             ),
                           ),
-                          child: Align(
-                            alignment: Alignment.bottomLeft,
-                            child: Text(audio?.metas.title ?? "",style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-              options: CarouselOptions(
-                aspectRatio: 2,
-                autoPlay: false,
-                enlargeCenterPage: true,
-                enlargeFactor: 0.2,
-                viewportFraction: 0.9,
-                enableInfiniteScroll: false,
-                onPageChanged: (index, reason) {
-                  cIndex = index;
-                  setState(() {});
-                  var audio=assetsAudioPlayer.playlist?.audios[index];
-                  if(audio!=null){
-                    assetsAudioPlayer.open(audio);
-                  }
-
-                  print("index $index");
-                },
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                5,
-                (index) {
-                  bool isSelect = cIndex == index;
-                  return Container(
-                    height: isSelect ? 13 : 10,
-                    width: isSelect ? 30 : 10,
-                    margin: EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: isSelect ? Colors.red : Colors.grey,
-                    ),
-                  );
-                },
-              ),
-            ),
-            StreamBuilder<Duration>(
-                stream: assetsAudioPlayer.currentPosition,
-                builder: (context, snapshot) {
-                  print("currentPosition ${snapshot.data?.inSeconds}");
-                  print("currentPosition1 ${assetsAudioPlayer.current.hasValue}");
-
-                  Duration? currentDuration;
-                  if(assetsAudioPlayer.current.hasValue){
-                    currentDuration = assetsAudioPlayer.current.value?.audio.duration;
-                  }
-
-                  return Opacity(
-                    opacity: assetsAudioPlayer.current.hasValue ?1 :0.2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
                           Row(
-                            children: [
-                              Text("${snapshot.data?.inMinutes ?? 0.0}:"),
-                              Text("${(snapshot.data?.inSeconds ?? 0.0) % 60}".padLeft(2, '0')),
-                              Expanded(
-                                child: Slider(
-                                  value: snapshot.data?.inSeconds.toDouble()??0,
-                                  min: 0,
-                                  max: currentDuration?.inSeconds.toDouble()??1,
-                                  onChanged: (value) {
-                                    print("onChanged $value");
-                                    assetsAudioPlayer.seek(Duration(seconds: value.toInt()));
-                                  },
-                                ),
-                              ),
-                              Text("${currentDuration?.inMinutes ?? 0.0}:${currentDuration?.inSeconds ?? 0.0}"),
-                            ],
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(
+                              5,
+                              (index) {
+                                bool isSelect = cIndex == index;
+                                return Container(
+                                  height: isSelect ? 13 : 10,
+                                  width: isSelect ? 30 : 10,
+                                  margin: EdgeInsets.all(5),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    color: isSelect ? Colors.red : Colors.grey,
+                                  ),
+                                );
+                              },
+                            ),
                           ),
+                          StreamBuilder<Duration>(
+                              stream: assetsAudioPlayer.currentPosition,
+                              builder: (context, snapshot) {
+                                print("currentPosition ${snapshot.data?.inSeconds}");
+                                print("currentPosition1 ${assetsAudioPlayer.current.hasValue}");
+
+                                Duration? currentDuration;
+                                if (assetsAudioPlayer.current.hasValue) {
+                                  currentDuration = assetsAudioPlayer.current.value?.audio.duration;
+                                }
+
+                                return Opacity(
+                                  opacity: assetsAudioPlayer.current.hasValue ? 1 : 0.2,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text("${snapshot.data?.inMinutes ?? 0.0}:"),
+                                            Text("${(snapshot.data?.inSeconds ?? 0.0) % 60}".padLeft(2, '0')),
+                                            Expanded(
+                                              child: Slider(
+                                                value: snapshot.data?.inSeconds.toDouble() ?? 0,
+                                                min: 0,
+                                                max: currentDuration?.inSeconds.toDouble() ?? 1,
+                                                onChanged: (value) {
+                                                  print("onChanged $value");
+                                                  assetsAudioPlayer.seek(Duration(seconds: value.toInt()));
+                                                },
+                                              ),
+                                            ),
+                                            Text(
+                                                "${currentDuration?.inMinutes ?? 0.0}:${currentDuration?.inSeconds ?? 0.0}"),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              FloatingActionButton.small(
+                                onPressed: () {
+                                  assetsAudioPlayer.previous();
+                                },
+                                tooltip: 'Increment',
+                                child: const Icon(Icons.skip_previous),
+                              ),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              StreamBuilder<bool>(
+                                  stream: assetsAudioPlayer.isPlaying,
+                                  builder: (context, snapshot) {
+                                    bool isPlaying = snapshot.data ?? false;
+                                    return FloatingActionButton(
+                                      onPressed: () {
+                                        assetsAudioPlayer.playOrPause();
+                                      },
+                                      tooltip: 'Increment',
+                                      child: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+                                    );
+                                  }),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              FloatingActionButton.small(
+                                onPressed: () {
+                                  assetsAudioPlayer.next();
+                                },
+                                tooltip: 'Increment',
+                                child: const Icon(Icons.skip_next),
+                              ),
+                            ],
+                          )
                         ],
                       ),
                     ),
-                  );
-                }),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FloatingActionButton.small(
-                  onPressed: () {
-                    assetsAudioPlayer.previous();
-                  },
-                  tooltip: 'Increment',
-                  child: const Icon(Icons.skip_previous),
+                    Transform.rotate(
+                      angle: pi * 1.5,
+                      child: StreamBuilder<double>(
+                          stream: assetsAudioPlayer.volume,
+                          builder: (context, snapshot) {
+                            var val = snapshot.data ?? 0;
+                            return Slider(
+                              value: val,
+                              onChanged: (value) {
+                                assetsAudioPlayer.setVolume(value);
+                              },
+                            );
+                          }),
+                    ),
+                  ],
                 ),
-                SizedBox(
-                  width: 10,
-                ),
-                StreamBuilder<bool>(
-                    stream: assetsAudioPlayer.isPlaying,
-                    builder: (context, snapshot) {
-                      bool isPlaying = snapshot.data ?? false;
-                      return FloatingActionButton(
-                        onPressed: () {
-                          assetsAudioPlayer.playOrPause();
-                        },
-                        tooltip: 'Increment',
-                        child: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
-                      );
-                    }),
-                SizedBox(
-                  width: 10,
-                ),
-                FloatingActionButton.small(
-                  onPressed: () {
-                    assetsAudioPlayer.next();
-                  },
-                  tooltip: 'Increment',
-                  child: const Icon(Icons.skip_next),
-                ),
+                Text("History"),
+                Text("Category"),
+                Text("Call"),
+                Text("Video"),
+                Text("History"),
+                Text("Category"),
+                Text("Call"),
+                Text("Call"),
+
               ],
-            )
-          ],
-        ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          tabController.index++;
+          // tabController.animateTo(tabController.index+1);
+        },
       ),
     );
   }
